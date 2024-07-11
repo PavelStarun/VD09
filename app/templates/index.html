@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Игра Clicker</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Clicker Game</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ml-auto">
+                {% if current_user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">Выход из аккаунта</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('login') }}">Вход</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('register') }}">Регистрация</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+    <div class="container text-center mt-5">
+        <div class="form-group">
+            <label for="time">Выберите время:</label>
+            <select id="time" class="form-control w-25 mx-auto">
+                <option value="10">10 секунд</option>
+                <option value="30">30 секунд</option>
+                <option value="60">1 минута</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="startGame()">Начать игру</button>
+    </div>
+    <div id="gameArea" style="display:none; position: relative; height: 100vh;">
+        <div class="circle" onclick="countClick()"></div>
+        <div>Оставшееся время: <span id="timeLeft"></span> сек</div>
+        <div>Клики: <span id="clickCount">0</span></div>
+    </div>
+    <script>
+        let clicks = 0;
+        let timeLeft;
+        let timer;
+
+        function startGame() {
+            clicks = 0;
+            document.getElementById('clickCount').textContent = clicks;
+            timeLeft = document.getElementById('time').value;
+            document.getElementById('timeLeft').textContent = timeLeft;
+            document.getElementById('gameArea').style.display = 'block';
+            moveCircle();
+
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timeLeft').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function countClick() {
+            clicks++;
+            document.getElementById('clickCount').textContent = clicks;
+            let circle = document.querySelector('.circle');
+            let newSize = Math.max(20, circle.clientWidth - 5) + 'px';
+            circle.style.width = newSize;
+            circle.style.height = newSize;
+            moveCircle();
+            changeColor(circle);
+        }
+
+        function moveCircle() {
+            let circle = document.querySelector('.circle');
+            let gameArea = document.getElementById('gameArea');
+            let maxX = gameArea.clientWidth - circle.clientWidth;
+            let maxY = gameArea.clientHeight - circle.clientHeight;
+            let randomX = Math.floor(Math.random() * maxX);
+            let randomY = Math.floor(Math.random() * maxY);
+            circle.style.left = randomX + 'px';
+            circle.style.top = randomY + 'px';
+        }
+
+        function changeColor(circle) {
+            let colors = ['#1f1f1f', '#2f2f2f', '#3f3f3f', '#4f4f4f', '#5f5f5f', '#6f6f6f', '#7f7f7f'];
+            let randomColor = colors[Math.floor(Math.random() * colors.length)];
+            circle.style.backgroundColor = randomColor;
+        }
+
+        function endGame() {
+            let circle = document.querySelector('.circle');
+            circle.style.width = '0px';
+            circle.style.height = '0px';
+            document.getElementById('gameArea').style.display = 'none';
+            let duration = document.getElementById('time').value;
+            alert(`Игра окончена! Ваш результат: ${clicks} кликов`);
+            // Отправка результата на сервер
+            fetch('/submit_score', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ clicks: clicks, duration: duration })
+            }).then(() => {
+                window.location.href = '/leaderboard/' + duration;
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Таблица рекордов</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Таблица рекордов - {{ duration }} секунд</h1>
+        <div class="text-center mb-4">
+            <a href="/leaderboard/10" class="btn btn-secondary">10 секунд</a>
+            <a href="/leaderboard/30" class="btn btn-secondary">30 секунд</a>
+            <a href="/leaderboard/60" class="btn btn-secondary">1 минута</a>
+        </div>
+        <table class="table table-bordered table-striped mt-3">
+            <thead>
+                <tr>
+                    <th>Пользователь</th>
+                    <th>Лучший результат</th>
+                    <th>Последние 5 результатов</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for username, result in results.items() %}
+                <tr>
+                    <td>{{ username }}</td>
+                    <td>{{ result.best_result }}</td>
+                    <td>{{ result.last_five_results | join(', ') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="text-center mt-3">
+            <a href="/" class="btn btn-primary">Вернуться к игре</a>
+            <a href="{{ url_for('logout') }}" class="btn btn-danger">Выход из аккаунта</a>
+        </div>
+    </div>
+</body>
+</html>
